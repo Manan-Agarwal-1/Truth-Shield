@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000/api
+    depends_on:
+      - backend
+    networks:
+      - truthshield
+
+  # Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:3000
+    networks:
+      - truthshield
+
+networks:
+  truthshield:
+    driver: bridge
+
+volumes:
+  node_modules_frontend:
+  node_modules_backend:
