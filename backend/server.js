@@ -15,7 +15,19 @@ const PORT = process.env.PORT || 5000
 
 connectDB()
 
-app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*' }))
+// Enhanced CORS configuration for development
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow all origins in development or if no origin (same-origin requests)
+    callback(null, true)
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 

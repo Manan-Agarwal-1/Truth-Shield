@@ -92,16 +92,6 @@ export default function Login() {
           </div>
         </div>
 
-          <div className="mt-6 pt-6 border-t border-dark-border">
-            <p className="text-center text-gray-400">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-primary hover:text-primary/80 font-semibold">
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </div>
-
         <div className="mt-8 p-4 rounded-lg border border-primary/30 bg-primary/5 text-sm text-primary">
           <p className="font-semibold mb-2">Demo Credentials:</p>
           <p>Email: demo@truthshield.ai</p>
