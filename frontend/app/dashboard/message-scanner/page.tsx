@@ -107,9 +107,9 @@ export default function MessageScanner() {
                 <p className="text-sm font-semibold">Scam Confidence Score</p>
                 <p className="text-2xl font-bold">{result.confidence}%</p>
               </div>
-              <div className="w-full bg-dark-border rounded-full h-3">
+              <div className="w-full bg-dark-border rounded-full h-3 overflow-hidden">
                 <div
-                  className={`h-3 rounded-full ${
+                  className={`h-3 rounded-full transition-all ${
                     result.confidence < 33 ? 'bg-success' :
                     result.confidence < 66 ? 'bg-warning' :
                     'bg-danger'

@@ -151,9 +151,9 @@ export default function DeepfakeScanner() {
                   <div className="text-3xl font-bold">{result.authenticityScore}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-3 w-full bg-dark-border rounded-full h-2">
+                <div className="mt-3 w-full bg-dark-border rounded-full h-2 overflow-hidden">
                   <div
-                    className={`h-2 rounded-full ${
+                    className={`h-2 rounded-full transition-all ${
                       result.authenticityScore > 70 ? 'bg-success' :
                       result.authenticityScore > 40 ? 'bg-warning' :
                       'bg-danger'
@@ -169,9 +169,9 @@ export default function DeepfakeScanner() {
                   <div className="text-3xl font-bold">{result.manipulationProbability}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-3 w-full bg-dark-border rounded-full h-2">
+                <div className="mt-3 w-full bg-dark-border rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-2 rounded-full bg-danger"
+                    className="h-2 rounded-full bg-danger transition-all"
                     style={{ width: `${result.manipulationProbability}%` }}
                   ></div>
                 </div>

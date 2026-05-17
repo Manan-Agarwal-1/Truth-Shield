@@ -121,9 +121,9 @@ export default function NewsScanner() {
                 <p className="text-sm font-semibold">Misinformation Score</p>
                 <p className="text-2xl font-bold">{result.misinformationScore}%</p>
               </div>
-              <div className="w-full bg-dark-border rounded-full h-3">
+              <div className="w-full bg-dark-border rounded-full h-3 overflow-hidden">
                 <div
-                  className={`h-3 rounded-full ${
+                  className={`h-3 rounded-full transition-all ${
                     result.misinformationScore < 33 ? 'bg-success' :
                     result.misinformationScore < 66 ? 'bg-warning' :
                     'bg-danger'

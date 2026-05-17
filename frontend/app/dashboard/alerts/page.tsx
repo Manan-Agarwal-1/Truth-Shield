@@ -228,6 +228,7 @@ export default function Alerts() {
                 type="checkbox"
                 defaultChecked={pref.enabled}
                 className="w-5 h-5 rounded cursor-pointer accent-primary"
+                aria-label={`Enable ${pref.label}`}
               />
             </div>
           ))}

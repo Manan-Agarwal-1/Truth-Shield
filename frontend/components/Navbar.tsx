@@ -23,7 +23,7 @@ export default function Navbar() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <button className="p-3 rounded-2xl hover:bg-white/5 transition">
+        <button className="p-3 rounded-2xl hover:bg-white/5 transition" title="Notifications">
           <Bell className="w-5 h-5 text-primary" />
         </button>
         <div className="flex items-center gap-3 rounded-3xl border border-dark-border/80 bg-[#071224] px-4 py-2">

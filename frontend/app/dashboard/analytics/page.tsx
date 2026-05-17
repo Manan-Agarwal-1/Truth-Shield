@@ -144,8 +144,8 @@ export default function Analytics() {
                   <span className="text-sm">{threat.name}</span>
                   <span className="text-sm font-bold text-danger">{threat.count}</span>
                 </div>
-                <div className="w-full bg-dark-border rounded-full h-2">
-                  <div className="h-2 rounded-full bg-danger" style={{ width: `${threat.percent}%` }}></div>
+                <div className="w-full bg-dark-border rounded-full h-2 overflow-hidden">
+                  <div className="h-2 rounded-full bg-danger transition-all" style={{ width: `${threat.percent}%` }}></div>
                 </div>
               </div>
             ))}
@@ -161,8 +161,8 @@ export default function Analytics() {
                   <span className="text-sm">{scanner.name}</span>
                   <span className="text-sm font-bold text-success">{scanner.accuracy}%</span>
                 </div>
-                <div className="w-full bg-dark-border rounded-full h-2">
-                  <div className="h-2 rounded-full bg-success" style={{ width: `${scanner.accuracy}%` }}></div>
+                <div className="w-full bg-dark-border rounded-full h-2 overflow-hidden">
+                  <div className="h-2 rounded-full bg-success transition-all" style={{ width: `${scanner.accuracy}%` }}></div>
                 </div>
               </div>
             ))}

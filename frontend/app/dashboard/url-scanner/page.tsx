@@ -100,7 +100,7 @@ export default function URLScanner() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-dark-card border border-dark-border/50 group">
               <span className="text-gray-400 flex-1 break-all text-sm">{result.url}</span>
-              <button className="p-2 rounded hover:bg-primary/10 transition">
+              <button className="p-2 rounded hover:bg-primary/10 transition" title="Copy URL">
                 <Copy className="w-4 h-4 text-primary" />
               </button>
             </div>
@@ -112,9 +112,9 @@ export default function URLScanner() {
                   <div className="text-2xl font-bold">{result.score}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-2 w-full bg-dark-border rounded-full h-2">
+                <div className="mt-2 w-full bg-dark-border rounded-full h-2 overflow-hidden">
                   <div
-                    className={`h-2 rounded-full ${
+                    className={`h-2 rounded-full transition-all ${
                       result.score < 33 ? 'bg-success' :
                       result.score < 66 ? 'bg-warning' :
                       'bg-danger'
@@ -130,9 +130,9 @@ export default function URLScanner() {
                   <div className="text-2xl font-bold">{result.trustScore}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-2 w-full bg-dark-border rounded-full h-2">
+                <div className="mt-2 w-full bg-dark-border rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-2 rounded-full bg-success"
+                    className="h-2 rounded-full bg-success transition-all"
                     style={{ width: `${result.trustScore}%` }}
                   ></div>
                 </div>
