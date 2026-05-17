@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, Loader, Image, Video } from 'lucide-react'
+import { Upload, Loader, Image, Video as VideoIcon } from 'lucide-react'
 import { api, safeApiError } from '@/lib/api'
 
 interface DeepfakeScanResult {
@@ -80,7 +80,7 @@ export default function DeepfakeScanner() {
                       <img src={preview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
                     ) : (
                       <div className="flex items-center justify-center">
-                        <Video className="w-16 h-16 text-primary" />
+                        <VideoIcon className="w-16 h-16 text-primary" />
                       </div>
                     )}
                     <p className="text-sm text-primary font-semibold">{file?.name}</p>
@@ -135,7 +135,7 @@ export default function DeepfakeScanner() {
             <div className="mb-6">
               {result.fileName.match(/\.(mp4|webm|avi)$/i) ? (
                 <div className="w-full bg-dark-card rounded-lg flex items-center justify-center py-12 border border-dark-border/50">
-                  <Video className="w-16 h-16 text-primary/50" />
+                  <VideoPlaceholder className="w-16 h-16 text-primary/50" />
                 </div>
               ) : (
                 <img src={preview} alt="Scanned media" className="w-full rounded-lg border border-dark-border/50" />
@@ -231,7 +231,7 @@ export default function DeepfakeScanner() {
   )
 }
 
-function Video({ className }: { className: string }) {
+function VideoPlaceholder({ className }: { className: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
       <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10.293 3.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L15.586 5 14.293 6.293z" />

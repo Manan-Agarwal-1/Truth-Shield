@@ -5,7 +5,7 @@ import { Trash2, Bell, Check } from 'lucide-react'
 import { api, safeApiError } from '@/lib/api'
 
 interface Alert {
-  id: number
+  id: string
   title: string
   description: string
   severity: 'critical' | 'high' | 'medium' | 'low'
@@ -46,14 +46,24 @@ export default function Alerts() {
     return true
   })
 
-  const handleMarkAsRead = (id: number) => {
-    setAlerts(alerts.map((alert) =>
-      alert.id === id ? { ...alert, read: true } : alert
-    ))
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await api.post(`/alerts/${id}/read`)
+      setAlerts(alerts.map((alert) =>
+        alert.id === id ? { ...alert, read: true } : alert
+      ))
+    } catch (err) {
+      setError(safeApiError(err))
+    }
   }
 
-  const handleDelete = (id: number) => {
-    setAlerts(alerts.filter((alert) => alert.id !== id))
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/alerts/${id}`)
+      setAlerts(alerts.filter((alert) => alert.id !== id))
+    } catch (err) {
+      setError(safeApiError(err))
+    }
   }
 
   const handleMarkAllAsRead = () => {

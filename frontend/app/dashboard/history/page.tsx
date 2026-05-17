@@ -89,8 +89,8 @@ export default function History() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await api.get('/history')
-        setHistoryData(response.data.history)
+        const response = await api.get('/scan/history')
+        setHistoryData(response.data.history ?? response.data)
       } catch (err) {
         setError(safeApiError(err))
       }

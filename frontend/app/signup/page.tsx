@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Shield, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { api, safeApiError } from '@/lib/api'
 import { setAuthUser } from '@/lib/auth'
 
@@ -27,9 +28,12 @@ export default function Signup() {
     try {
       const response = await api.post('/auth/signup', { name, email, password })
       setAuthUser(response.data.user)
+      toast.success('Account created successfully')
       router.push('/dashboard')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     }
   }
 
@@ -96,19 +100,6 @@ export default function Signup() {
             <div>
               <label className="block text-sm font-medium mb-2">Confirm Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-primary/50" />
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="input-dark pl-10"
-                  required
-                />
-              </div>
-            </div>
-
-            {error && <p className="text-sm text-danger">{error}</p>} className="relative">
                 <Lock className="absolute left-3 top-3 w-5 h-5 text-primary/50" />
                 <input
                   type="password"

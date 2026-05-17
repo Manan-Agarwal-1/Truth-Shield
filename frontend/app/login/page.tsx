@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Shield, Mail, Lock, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { api, safeApiError } from '@/lib/api'
 import { setAuthUser } from '@/lib/auth'
 
@@ -20,9 +21,12 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password })
       setAuthUser(response.data.user)
+      toast.success('Signed in successfully')
       router.push('/dashboard')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     }
   }
 
