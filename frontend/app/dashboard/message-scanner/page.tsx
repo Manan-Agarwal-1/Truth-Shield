@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { Send, Loader } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
 interface MessageScanResult {
   message: string
   classification: 'SAFE' | 'SUSPICIOUS' | 'SCAM'
   confidence: number
   indicators: string[]
+  advice: string
 }
 
 export default function MessageScanner() {
@@ -15,61 +17,34 @@ export default function MessageScanner() {
   const [result, setResult] = useState<MessageScanResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<MessageScanResult[]>([])
-
-  const scamIndicators = [
-    'urgent', 'verify', 'confirm', 'update', 'expire', 'claim', 'winner', 'congratulations',
-    'click here', 'act now', 'limited time', 'exclusive', 'cancel subscription', 'confirm identity',
-    'account will close', 'unusual activity', 'verify account', 'click link', 'suspicious activity',
-  ]
-
-  const generateMockResult = (inputMessage: string): MessageScanResult => {
-    const lowerMsg = inputMessage.toLowerCase()
-    const foundIndicators = scamIndicators.filter(indicator => lowerMsg.includes(indicator))
-    
-    let confidence = 0
-    let classification: 'SAFE' | 'SUSPICIOUS' | 'SCAM' = 'SAFE'
-    
-    if (foundIndicators.length === 0) {
-      confidence = Math.random() * 15
-      classification = 'SAFE'
-    } else if (foundIndicators.length === 1) {
-      confidence = 30 + Math.random() * 40
-      classification = 'SUSPICIOUS'
-    } else {
-      confidence = 70 + Math.random() * 30
-      classification = 'SCAM'
-    }
-
-    return {
-      message: inputMessage,
-      classification,
-      confidence: Math.round(confidence),
-      indicators: foundIndicators.slice(0, 5)
-    }
-  }
+  const [error, setError] = useState('')
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message) return
+    if (!message.trim()) return
 
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1200))
+    setError('')
 
-    const scanResult = generateMockResult(message)
-    setResult(scanResult)
-    setHistory([scanResult, ...history.slice(0, 9)])
-    setLoading(false)
+    try {
+      const response = await api.post('/scan/message', { message })
+      const scanResult: MessageScanResult = response.data.result
+      setResult(scanResult)
+      setHistory([scanResult, ...history.slice(0, 9)])
+    } catch (err) {
+      setError(safeApiError(err))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">Message Scanner</h1>
-        <p className="text-gray-400">Detect scams in SMS, emails, and chat messages</p>
+        <p className="text-gray-400">Detect scams in SMS, emails, and chat messages.</p>
       </div>
 
-      {/* Scanner Input */}
       <div className="card-dark">
         <h2 className="text-xl font-bold mb-6">Analyze Message</h2>
         <form onSubmit={handleScan} className="space-y-4">
@@ -84,27 +59,30 @@ export default function MessageScanner() {
               disabled={loading}
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading || !message}
-            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <Loader className="w-4 h-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Scan Message
-              </>
-            )}
-          </button>
+
+          <div className="flex items-center justify-between gap-4">
+            {error && <p className="text-sm text-danger flex-1">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || !message.trim()}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Scan Message
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* Scan Result */}
       {result && (
         <div className="card-dark border-2 border-primary/30">
           <div className="flex items-start justify-between mb-6">
@@ -119,13 +97,11 @@ export default function MessageScanner() {
           </div>
 
           <div className="space-y-4">
-            {/* Message Display */}
             <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
               <p className="text-xs text-gray-400 mb-2">Original Message</p>
               <p className="text-sm leading-relaxed">{result.message}</p>
             </div>
 
-            {/* Confidence Score */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <p className="text-sm font-semibold">Scam Confidence Score</p>
@@ -143,7 +119,6 @@ export default function MessageScanner() {
               </div>
             </div>
 
-            {/* Indicators */}
             {result.indicators.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-warning">Detected Scam Indicators:</p>
@@ -157,35 +132,14 @@ export default function MessageScanner() {
               </div>
             )}
 
-            {/* Recommendations */}
             <div className="p-4 rounded-lg bg-dark-card/50 border border-dark-border/30 space-y-2">
               <p className="font-semibold text-sm">Recommendations:</p>
-              <ul className="text-xs text-gray-300 space-y-1">
-                {result.classification === 'SAFE' && (
-                  <li>✓ This message appears to be legitimate</li>
-                )}
-                {result.classification === 'SUSPICIOUS' && (
-                  <>
-                    <li>⚠ Be cautious with this message</li>
-                    <li>⚠ Do not click links from unknown senders</li>
-                    <li>⚠ Never share personal information</li>
-                  </>
-                )}
-                {result.classification === 'SCAM' && (
-                  <>
-                    <li>🚨 This appears to be a scam message</li>
-                    <li>🚨 Do not click any links or respond</li>
-                    <li>🚨 Block the sender immediately</li>
-                    <li>🚨 Report to your service provider</li>
-                  </>
-                )}
-              </ul>
+              <p className="text-sm text-gray-300">{result.advice}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Scan History */}
       {history.length > 0 && (
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Recent Scans</h2>

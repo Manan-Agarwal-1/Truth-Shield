@@ -2,50 +2,33 @@
 
 const { v4: uuidv4 } = require('uuid')
 
-// Sample scam messages
-const scamMessages = [
-  'Urgent: Verify your account immediately! Click here to confirm: [phishing-link.com]',
-  'Congratulations! You won $1,000,000 in our lottery. Claim now!',
-  'Your Amazon account has unusual activity. Confirm identity: [fake-amazon.com]',
-  'Bank Alert: Unauthorized transaction detected. Update password: [bank-phish.com]',
-  'Limited offer: 80% off all products. Use code NOW: [scam-shop.com]',
-  'Click here to cancel your subscription before charges apply: [phishing.com]',
-  'PayPal security alert: Your account will close. Verify now: [paypal-fake.com]',
-  'You have been selected for a special offer. Act now: [spam-offer.com]',
+const scamKeywords = ['urgent', 'verify', 'confirm', 'account', 'secure', 'login', 'update', 'offer', 'winner', 'payment']
+const fakeDomains = ['secure-verify', 'account-check', 'verify-login', 'login-update', 'amazon-support', 'paypal-alert']
+const legitimateDomains = ['github.com', 'google.com', 'amazon.com', 'wikipedia.org', 'linkedin.com', 'mozilla.org']
+const misinformationKeywords = ['shocking', 'exclusive', 'leaked', 'doctors hate', 'scientists hate', 'bombshell', 'unbelievable', 'cover-up', 'hidden truth']
+
+const scamPhrases = [
+  'Urgent: Verify your account immediately! Click here to confirm.',
+  'Congratulations! You won a prize. Claim your reward now.',
+  'Your account has been compromised. Reset your password instantly.',
+  'Bank alert: Unauthorized payment detected. Confirm details here.',
+  'Security breach detected. Secure your account within 24 hours.',
+  'Update required: Your identity must be verified to avoid suspension.',
+  'Payment failed. Re-enter your card info to restore access.',
+  'You are eligible for a refund. Submit your details to receive funds.',
 ]
 
-// Sample safe messages
-const safeMessages = [
-  'Hey, how are you doing?',
-  'Meeting tomorrow at 10am in conference room B',
-  'Great job on the presentation today!',
-  'The project is on track for completion next week',
-  'Coffee at 3pm?',
-  'Thanks for your help with that issue',
-  'See you at the team lunch',
-  'I uploaded the files to the shared folder',
+const safePhrases = [
+  'Let me know if you want to review the report tomorrow.',
+  'Thanks for joining the meeting today. The notes are in the shared folder.',
+  'I appreciate your help on the deployment task.',
+  'The event is confirmed for Tuesday and the calendar invite is sent.',
+  'Our security team completed the audit with no critical issues.',
+  'Please review the document and provide feedback by Friday.',
+  'The update was successful and the site is now live.',
+  'I have attached the requested files for your reference.',
 ]
 
-// Sample URLs
-const phishingUrls = [
-  'https://secure-verify-account.com',
-  'https://paypal-security-check.net',
-  'https://amazon-account-confirm.co.uk',
-  'https://apple-id-update.info',
-  'https://microsoft-account-verify.tk',
-  'https://google-security-alert.icu',
-]
-
-const safeUrls = [
-  'https://www.github.com',
-  'https://www.google.com',
-  'https://www.amazon.com',
-  'https://www.stackoverflow.com',
-  'https://www.wikipedia.org',
-  'https://www.linkedin.com',
-]
-
-// Sample fake news headlines
 const fakeNewsHeadlines = [
   'Shocking: Celebrity secretly admits to plastic surgery!',
   'New study: Drinking coffee cures cancer (doctors hate this)',
@@ -65,60 +48,84 @@ const legitimateHeadlines = [
   'Local community organizes cleanup initiative',
 ]
 
-// Generate mock users
 function generateMockUsers(count = 10) {
   const users = []
-  for (let i = 0; i < count; i++) {
+  for (let i = 1; i <= count; i++) {
     users.push({
       id: uuidv4(),
-      email: `user${i + 1}@truthshield.ai`,
-      name: `User ${i + 1}`,
-      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+      email: `user${i}@truthshield.ai`,
+      name: `User ${i}`,
       subscriptionTier: ['free', 'pro', 'enterprise'][Math.floor(Math.random() * 3)],
-      scansThisMonth: Math.floor(Math.random() * 500),
+      scansThisMonth: Math.floor(Math.random() * 450),
+      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
     })
   }
   return users
 }
 
-// Generate mock scan results
-function generateMockScanResults(count = 50) {
+function generateMockScanResults(count = 100) {
   const results = []
   const types = ['URL', 'MESSAGE', 'DEEPFAKE', 'NEWS']
-  const resultStatuses = ['SAFE', 'SUSPICIOUS', 'DANGEROUS']
 
   for (let i = 0; i < count; i++) {
     const type = types[Math.floor(Math.random() * types.length)]
     let content = ''
+    let threatLevel = 'SAFE'
+    let score = Math.floor(Math.random() * 40)
 
-    switch (type) {
-      case 'URL':
-        content = Math.random() > 0.5 ? phishingUrls[Math.floor(Math.random() * phishingUrls.length)] : safeUrls[Math.floor(Math.random() * safeUrls.length)]
-        break
-      case 'MESSAGE':
-        content = Math.random() > 0.5 ? scamMessages[Math.floor(Math.random() * scamMessages.length)] : safeMessages[Math.floor(Math.random() * safeMessages.length)]
-        break
-      case 'NEWS':
-        content = Math.random() > 0.5 ? fakeNewsHeadlines[Math.floor(Math.random() * fakeNewsHeadlines.length)] : legitimateHeadlines[Math.floor(Math.random() * legitimateHeadlines.length)]
-        break
+    if (type === 'URL') {
+      if (Math.random() > 0.45) {
+        content = `https://${fakeDomains[Math.floor(Math.random() * fakeDomains.length)]}-${Math.floor(Math.random() * 999)}.com`
+        threatLevel = Math.random() > 0.45 ? 'DANGEROUS' : 'SUSPICIOUS'
+        score = Math.floor(60 + Math.random() * 40)
+      } else {
+        content = `https://${legitimateDomains[Math.floor(Math.random() * legitimateDomains.length)]}`
+      }
+    }
+
+    if (type === 'MESSAGE') {
+      if (Math.random() > 0.45) {
+        content = scamPhrases[Math.floor(Math.random() * scamPhrases.length)]
+        threatLevel = Math.random() > 0.35 ? 'DANGEROUS' : 'SUSPICIOUS'
+        score = Math.floor(55 + Math.random() * 45)
+      } else {
+        content = safePhrases[Math.floor(Math.random() * safePhrases.length)]
+      }
+    }
+
+    if (type === 'NEWS') {
+      if (Math.random() > 0.5) {
+        content = fakeNewsHeadlines[Math.floor(Math.random() * fakeNewsHeadlines.length)]
+        threatLevel = Math.random() > 0.35 ? 'DANGEROUS' : 'SUSPICIOUS'
+        score = Math.floor(60 + Math.random() * 40)
+      } else {
+        content = legitimateHeadlines[Math.floor(Math.random() * legitimateHeadlines.length)]
+      }
+    }
+
+    if (type === 'DEEPFAKE') {
+      content = `media-scan-${Math.floor(Math.random() * 1000)}.mp4`
+      threatLevel = Math.random() > 0.6 ? 'DANGEROUS' : 'SAFE'
+      score = threatLevel === 'SAFE' ? Math.floor(Math.random() * 30) : Math.floor(70 + Math.random() * 30)
     }
 
     results.push({
       id: uuidv4(),
       type,
-      content: content.substring(0, 100),
-      result: resultStatuses[Math.floor(Math.random() * resultStatuses.length)],
-      score: Math.floor(Math.random() * 100),
+      content,
+      threatLevel,
+      score,
+      confidence: Math.floor(70 + Math.random() * 25),
       timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+      indicators: [],
       userId: uuidv4(),
     })
   }
+
   return results
 }
 
-// Generate mock alerts
 function generateMockAlerts(count = 15) {
-  const alerts = []
   const titles = [
     'Phishing Attempt Detected',
     'Malicious URL Blocked',
@@ -128,35 +135,37 @@ function generateMockAlerts(count = 15) {
     'Suspicious Account Activity',
   ]
   const severities = ['critical', 'high', 'medium', 'low']
+  const alerts = []
 
   for (let i = 0; i < count; i++) {
     alerts.push({
       id: uuidv4(),
       title: titles[Math.floor(Math.random() * titles.length)],
+      description: `Alert triggered by intelligent monitoring engine for event ${i + 1}.`,
       severity: severities[Math.floor(Math.random() * severities.length)],
       timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
       read: Math.random() > 0.3,
       userId: uuidv4(),
     })
   }
+
   return alerts
 }
 
-// Generate mock analytics
 function generateMockAnalytics() {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  const analytics = {
-    weeklyScans: weekDays.map(day => ({
+  return {
+    weeklyScans: weekDays.map((day) => ({
       day,
-      scans: Math.floor(Math.random() * 100) + 30,
-      threats: Math.floor(Math.random() * 30),
+      scans: Math.floor(Math.random() * 100) + 40,
+      threats: Math.floor(Math.random() * 35),
     })),
     threatDistribution: {
-      phishing: 35,
-      malware: 25,
-      scam: 20,
-      spam: 15,
-      other: 5,
+      phishing: 34,
+      malware: 23,
+      scam: 21,
+      spam: 14,
+      other: 8,
     },
     scannerAccuracy: {
       urlScanner: 98.5,
@@ -165,7 +174,64 @@ function generateMockAnalytics() {
       newsVerifier: 95.1,
     },
   }
-  return analytics
+}
+
+function generateThreatAnalysis(input) {
+  const normalized = input.toLowerCase()
+  const score = scamKeywords.reduce((acc, keyword) => acc + (normalized.includes(keyword) ? 15 : 0), 0)
+  const hasFakeDomain = fakeDomains.some((domain) => normalized.includes(domain))
+  const threatScore = Math.min(95, score + (hasFakeDomain ? 25 : 0) + Math.floor(Math.random() * 15))
+  const threatLevel = threatScore > 65 ? 'DANGEROUS' : threatScore > 35 ? 'SUSPICIOUS' : 'SAFE'
+
+  return {
+    threatLevel,
+    score: threatScore,
+    confidence: 70 + Math.floor(Math.random() * 25),
+    details: normalized.includes('https://') || normalized.includes('http://') ? ['URL structure analyzed', 'SSL validation performed'] : ['Content pattern scanned', 'Language model verification completed'],
+  }
+}
+
+function analyzeDeepfake(filename) {
+  const isDeepfake = Math.random() > 0.55
+  const authenticityScore = isDeepfake ? Math.floor(20 + Math.random() * 40) : Math.floor(70 + Math.random() * 30)
+  const manipulationProbability = 100 - authenticityScore
+
+  return {
+    threatLevel: isDeepfake ? 'DANGEROUS' : 'SAFE',
+    authenticityScore,
+    manipulationProbability,
+    isDeepfake,
+    artifacts: isDeepfake
+      ? ['Inconsistent facial reflections', 'Unnatural eye movement', 'Irregular lighting patterns']
+      : ['Normal facial detail', 'Consistent motion analysis', 'Authentic texture patterns'],
+    recommendations: isDeepfake
+      ? ['Do not trust this asset', 'Share with caution', 'Report for further investigation']
+      : ['Content appears authentic', 'No manipulation signs detected'],
+  }
+}
+
+function analyzeNews(headline, article = '') {
+  const combined = `${headline} ${article}`.toLowerCase()
+  const flags = misinformationKeywords.filter((keyword) => combined.includes(keyword)).length
+  const score = Math.min(95, flags * 25 + Math.floor(Math.random() * 25))
+  const classification = score > 65 ? 'MISINFORMATION' : score > 35 ? 'UNVERIFIED' : 'VERIFIED'
+
+  return {
+    threatLevel: classification === 'VERIFIED' ? 'SAFE' : classification === 'UNVERIFIED' ? 'SUSPICIOUS' : 'DANGEROUS',
+    misinformationScore: score,
+    classification,
+    credibilityFactors: [
+      { factor: 'Source reliability', status: !combined.includes('exclusive') },
+      { factor: 'Citation & evidence', status: score < 50 },
+      { factor: 'Sensational language', status: score < 40 },
+      { factor: 'Fact-check signals', status: score < 60 },
+    ],
+    sourceAnalysis: classification === 'VERIFIED'
+      ? 'High confidence from trusted sources and balanced reporting.'
+      : classification === 'UNVERIFIED'
+      ? 'The story contains mixed signals and should be cross-checked.'
+      : 'Strong misinformation indicators detected. Do not share without verification.',
+  }
 }
 
 module.exports = {
@@ -173,10 +239,11 @@ module.exports = {
   generateMockScanResults,
   generateMockAlerts,
   generateMockAnalytics,
-  scamMessages,
-  safeMessages,
-  phishingUrls,
-  safeUrls,
+  generateThreatAnalysis,
+  analyzeDeepfake,
+  analyzeNews,
+  scamPhrases,
+  safePhrases,
   fakeNewsHeadlines,
   legitimateHeadlines,
 }

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Trash2, Bell, Check } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
 interface Alert {
   id: number
@@ -13,69 +14,30 @@ interface Alert {
   action?: string
 }
 
-const alertsData: Alert[] = [
-  {
-    id: 1,
-    title: 'Phishing Attempt Detected',
-    description: 'A phishing email trying to impersonate your bank was detected and blocked.',
-    severity: 'critical',
-    timestamp: '5 mins ago',
-    read: false,
-    action: 'View Details',
-  },
-  {
-    id: 2,
-    title: 'Suspicious URL Identified',
-    description: 'The URL https://secure-verify-account.net was identified as a phishing attempt.',
-    severity: 'critical',
-    timestamp: '1 hour ago',
-    read: false,
-  },
-  {
-    id: 3,
-    title: 'Deepfake Media Detected',
-    description: 'A manipulated video attempting to impersonate a public figure was found in your messages.',
-    severity: 'high',
-    timestamp: '3 hours ago',
-    read: true,
-  },
-  {
-    id: 4,
-    title: 'Scam Message Pattern',
-    description: 'Multiple scam messages with similar patterns were detected from different sources.',
-    severity: 'high',
-    timestamp: '5 hours ago',
-    read: true,
-  },
-  {
-    id: 5,
-    title: 'Misinformation Alert',
-    description: 'A viral news story with high misinformation indicators was detected in your feed.',
-    severity: 'medium',
-    timestamp: '1 day ago',
-    read: true,
-  },
-  {
-    id: 6,
-    title: 'Account Activity Alert',
-    description: 'Your TruthShield account login from a new device was detected.',
-    severity: 'low',
-    timestamp: '2 days ago',
-    read: true,
-  },
-  {
-    id: 7,
-    title: 'Malware Link Found',
-    description: 'A URL containing known malware signatures was detected and quarantined.',
-    severity: 'critical',
-    timestamp: '2 days ago',
-    read: true,
-  },
+const defaultPreferences = [
+  { label: 'Critical Threats', enabled: true },
+  { label: 'New Vulnerabilities', enabled: true },
+  { label: 'Scan Results Summary', enabled: true },
+  { label: 'Weekly Report', enabled: false },
 ]
 
 export default function Alerts() {
-  const [alerts, setAlerts] = useState<Alert[]>(alertsData)
+  const [alerts, setAlerts] = useState<Alert[]>([])
   const [filter, setFilter] = useState<'all' | 'unread' | 'critical' | 'high'>('all')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await api.get('/alerts')
+        setAlerts(response.data.alerts)
+      } catch (err) {
+        setError(safeApiError(err))
+      }
+    }
+
+    fetchAlerts()
+  }, [])
 
   const filteredAlerts = alerts.filter((alert) => {
     if (filter === 'unread') return !alert.read
@@ -259,12 +221,7 @@ export default function Alerts() {
       <div className="card-dark">
         <h2 className="text-lg font-bold mb-4">Alert Preferences</h2>
         <div className="space-y-3">
-          {[
-            { label: 'Critical Threats', enabled: true },
-            { label: 'New Vulnerabilities', enabled: true },
-            { label: 'Scan Results Summary', enabled: true },
-            { label: 'Weekly Report', enabled: false },
-          ].map((pref, idx) => (
+          {defaultPreferences.map((pref, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-dark-card/50 border border-dark-border/30">
               <span className="text-sm">{pref.label}</span>
               <input

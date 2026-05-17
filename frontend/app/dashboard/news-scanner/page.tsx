@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Send, Loader } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
 interface NewsScanResult {
   headline: string
@@ -18,87 +19,34 @@ export default function NewsScanner() {
   const [result, setResult] = useState<NewsScanResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<NewsScanResult[]>([])
-
-  const misinformationKeywords = [
-    'shocking', 'exclusive', 'breaking', 'leaked', 'bombshell', 'unbelievable',
-    'scientists hate', 'doctors hate', 'they dont want', 'conspiracy', 'cover-up',
-    'hidden truth', 'exposed', 'suppressed', 'one weird trick', 'you wont believe',
-  ]
-
-  const generateMockResult = (inputHeadline: string, inputArticle: string): NewsScanResult => {
-    const content = (inputHeadline + ' ' + inputArticle).toLowerCase()
-    const foundKeywords = misinformationKeywords.filter(kw => content.includes(kw))
-    
-    let misinformationScore = 0
-    let classification: 'VERIFIED' | 'UNVERIFIED' | 'MISINFORMATION' = 'VERIFIED'
-    
-    if (foundKeywords.length === 0) {
-      misinformationScore = Math.random() * 20
-      classification = 'VERIFIED'
-    } else if (foundKeywords.length <= 2) {
-      misinformationScore = 40 + Math.random() * 30
-      classification = 'UNVERIFIED'
-    } else {
-      misinformationScore = 70 + Math.random() * 30
-      classification = 'MISINFORMATION'
-    }
-
-    const credibilityFactors = [
-      { factor: 'Multiple credible sources', status: classification === 'VERIFIED' },
-      { factor: 'Proper citations and links', status: classification === 'VERIFIED' },
-      { factor: 'No sensationalism detected', status: misinformationScore < 40 },
-      { factor: 'Verifiable claims', status: classification !== 'MISINFORMATION' },
-      { factor: 'Professional reporting', status: classification !== 'MISINFORMATION' },
-    ]
-
-    return {
-      headline: inputHeadline,
-      misinformationScore: Math.round(misinformationScore),
-      classification,
-      credibilityFactors,
-      sourceAnalysis: classification === 'VERIFIED' 
-        ? 'This news appears to be from established sources with credible reporting.'
-        : classification === 'UNVERIFIED'
-        ? 'This news contains elements that need verification from multiple sources.'
-        : 'This content shows significant indicators of misinformation.',
-      suggestions: classification === 'VERIFIED' ? [
-        '✓ Content appears credible',
-        '✓ Safe to share',
-        '✓ Multiple sources confirm the information',
-      ] : classification === 'UNVERIFIED' ? [
-        '⚠ Verify with multiple trusted sources before sharing',
-        '⚠ Check the original source',
-        '⚠ Look for fact-checking articles',
-      ] : [
-        '🚨 Do not share this content',
-        '🚨 Report as misinformation',
-        '🚨 Check verified fact-checking websites',
-      ]
-    }
-  }
+  const [error, setError] = useState('')
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!headline) return
+    if (!headline.trim()) return
 
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    setError('')
 
-    const scanResult = generateMockResult(headline, article)
-    setResult(scanResult)
-    setHistory([scanResult, ...history.slice(0, 9)])
-    setLoading(false)
+    try {
+      const response = await api.post('/scan/news', { headline, article })
+      const scanResult: NewsScanResult = response.data.result
+      setResult(scanResult)
+      setHistory([scanResult, ...history.slice(0, 9)])
+    } catch (err) {
+      setError(safeApiError(err))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">Fake News Detector</h1>
-        <p className="text-gray-400">Verify news headlines and articles for misinformation</p>
+        <p className="text-gray-400">Verify news headlines and articles for misinformation.</p>
       </div>
 
-      {/* Scanner Input */}
       <div className="card-dark">
         <h2 className="text-xl font-bold mb-6">Analyze News Content</h2>
         <form onSubmit={handleScan} className="space-y-4">
@@ -126,27 +74,29 @@ export default function NewsScanner() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || !headline}
-            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <Loader className="w-4 h-4 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Check News
-              </>
-            )}
-          </button>
+          <div className="flex items-center justify-between gap-4">
+            {error && <p className="text-sm text-danger flex-1">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || !headline.trim()}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Check News
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* Scan Result */}
       {result && (
         <div className="card-dark border-2 border-primary/30">
           <div className="flex items-start justify-between mb-6">
@@ -161,13 +111,11 @@ export default function NewsScanner() {
           </div>
 
           <div className="space-y-4">
-            {/* Headline Display */}
             <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
               <p className="text-xs text-gray-400 mb-2">Headline</p>
               <p className="text-sm font-semibold leading-relaxed">{result.headline}</p>
             </div>
 
-            {/* Misinformation Score */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <p className="text-sm font-semibold">Misinformation Score</p>
@@ -185,7 +133,6 @@ export default function NewsScanner() {
               </div>
             </div>
 
-            {/* Credibility Factors */}
             <div className="space-y-2">
               <p className="text-sm font-semibold">Credibility Assessment:</p>
               <div className="space-y-2">
@@ -207,13 +154,11 @@ export default function NewsScanner() {
               </div>
             </div>
 
-            {/* Source Analysis */}
             <div className="p-4 rounded-lg bg-dark-card/50 border border-dark-border/30">
               <p className="text-sm font-semibold mb-2">Source Analysis</p>
               <p className="text-sm text-gray-300">{result.sourceAnalysis}</p>
             </div>
 
-            {/* Recommendations */}
             <div className="p-4 rounded-lg bg-dark-card/50 border border-dark-border/30 space-y-2">
               <p className="font-semibold text-sm">Recommendations:</p>
               <ul className="text-xs text-gray-300 space-y-1">
@@ -226,7 +171,6 @@ export default function NewsScanner() {
         </div>
       )}
 
-      {/* Scan History */}
       {history.length > 0 && (
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Recent Checks</h2>

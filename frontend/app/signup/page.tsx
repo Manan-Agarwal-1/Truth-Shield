@@ -1,29 +1,41 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Shield, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
+import { setAuthUser } from '@/lib/auth'
 
 export default function Signup() {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+
     if (password !== confirmPassword) {
-      alert('Passwords do not match')
+      setError('Passwords do not match')
       return
     }
-    localStorage.setItem('user', JSON.stringify({ name, email, id: Math.random() }))
-    window.location.href = '/dashboard'
+
+    try {
+      const response = await api.post('/auth/signup', { name, email, password })
+      setAuthUser(response.data.user)
+      router.push('/dashboard')
+    } catch (err) {
+      setError(safeApiError(err))
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-dark via-dark to-dark-card flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
             <Shield className="w-6 h-6 text-white" />
@@ -31,8 +43,7 @@ export default function Signup() {
           <span className="font-bold text-2xl neon-blue">TruthShield AI</span>
         </div>
 
-        {/* Form */}
-        <div className="card-dark border-2 border-dark-border">
+        <div className="card-dark border-2 border-dark-border p-8">
           <h1 className="text-2xl font-bold mb-2">Create Your Account</h1>
           <p className="text-gray-400 mb-8">Join thousands protecting their digital life</p>
 
@@ -96,6 +107,21 @@ export default function Signup() {
                 />
               </div>
             </div>
+
+            {error && <p className="text-sm text-danger">{error}</p>} className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-primary/50" />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input-dark pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && <p className="text-sm text-danger">{error}</p>}
 
             <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 mt-6">
               Create Account <ArrowRight className="w-4 h-4" />

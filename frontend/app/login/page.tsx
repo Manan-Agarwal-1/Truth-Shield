@@ -1,24 +1,34 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Shield, Mail, Lock, ArrowRight } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
+import { setAuthUser } from '@/lib/auth'
 
 export default function Login() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Store mock user data and redirect
-    localStorage.setItem('user', JSON.stringify({ email, id: Math.random() }))
-    window.location.href = '/dashboard'
+    setError('')
+
+    try {
+      const response = await api.post('/auth/login', { email, password })
+      setAuthUser(response.data.user)
+      router.push('/dashboard')
+    } catch (err) {
+      setError(safeApiError(err))
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-dark via-dark to-dark-card flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
             <Shield className="w-6 h-6 text-white" />
@@ -26,8 +36,7 @@ export default function Login() {
           <span className="font-bold text-2xl neon-blue">TruthShield AI</span>
         </div>
 
-        {/* Form */}
-        <div className="card-dark border-2 border-dark-border">
+        <div className="card-dark border-2 border-dark-border p-8">
           <h1 className="text-2xl font-bold mb-2">Welcome Back</h1>
           <p className="text-gray-400 mb-8">Sign in to your account to continue</p>
 
@@ -62,6 +71,8 @@ export default function Login() {
               </div>
             </div>
 
+            {error && <p className="text-sm text-danger">{error}</p>}
+
             <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 mt-6">
               Sign In <ArrowRight className="w-4 h-4" />
             </button>
@@ -77,7 +88,16 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Demo Info */}
+          <div className="mt-6 pt-6 border-t border-dark-border">
+            <p className="text-center text-gray-400">
+              Don't have an account?{' '}
+              <Link href="/signup" className="text-primary hover:text-primary/80 font-semibold">
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
+
         <div className="mt-8 p-4 rounded-lg border border-primary/30 bg-primary/5 text-sm text-primary">
           <p className="font-semibold mb-2">Demo Credentials:</p>
           <p>Email: demo@truthshield.ai</p>

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Download, Filter } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
-const historyData = [
+const initialHistory = [
   {
     id: 1,
     type: 'URL Scan',
@@ -82,6 +83,21 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterResult, setFilterResult] = useState('all')
+  const [historyData, setHistoryData] = useState(initialHistory)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await api.get('/history')
+        setHistoryData(response.data.history)
+      } catch (err) {
+        setError(safeApiError(err))
+      }
+    }
+
+    fetchHistory()
+  }, [])
 
   const filteredHistory = historyData.filter((item) => {
     const matchesSearch = item.content.toLowerCase().includes(searchTerm.toLowerCase()) ||

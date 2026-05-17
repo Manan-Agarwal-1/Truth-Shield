@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, Loader, Image } from 'lucide-react'
+import { Upload, Loader, Image, Video } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
 interface DeepfakeScanResult {
   fileName: string
@@ -18,6 +19,7 @@ export default function DeepfakeScanner() {
   const [result, setResult] = useState<DeepfakeScanResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<DeepfakeScanResult[]>([])
+  const [error, setError] = useState('')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -31,63 +33,32 @@ export default function DeepfakeScanner() {
     }
   }
 
-  const generateMockResult = (fileName: string): DeepfakeScanResult => {
-    const isDeepfake = Math.random() > 0.6
-    const authenticityScore = isDeepfake ? Math.random() * 40 : 80 + Math.random() * 20
-    const manipulationProbability = 100 - authenticityScore
-
-    const artifacts = isDeepfake ? [
-      'Inconsistent lighting patterns detected',
-      'Unnatural eye movement patterns',
-      'Compression artifacts near face boundaries',
-      'Temporal inconsistencies in video',
-    ] : [
-      'Natural lighting consistent throughout',
-      'Normal eye movement patterns',
-      'No suspicious compression artifacts',
-      'Temporal coherence verified',
-    ]
-
-    return {
-      fileName,
-      authenticityScore: Math.round(authenticityScore),
-      manipulationProbability: Math.round(manipulationProbability),
-      isDeepfake,
-      artifacts,
-      recommendations: isDeepfake ? [
-        '🚨 This appears to be a deepfake or manipulated media',
-        '🚨 Do not share or verify this as authentic',
-        '🚨 Report to the relevant platform',
-      ] : [
-        '✓ Media appears authentic',
-        '✓ No significant manipulation detected',
-        '✓ Safe to share',
-      ]
-    }
-  }
-
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file) return
 
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    setError('')
 
-    const scanResult = generateMockResult(file.name)
-    setResult(scanResult)
-    setHistory([scanResult, ...history.slice(0, 9)])
-    setLoading(false)
+    try {
+      const response = await api.post('/scan/deepfake', { fileName: file.name })
+      const scanResult: DeepfakeScanResult = response.data.result
+      setResult(scanResult)
+      setHistory([scanResult, ...history.slice(0, 9)])
+    } catch (err) {
+      setError(safeApiError(err))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">Deepfake Scanner</h1>
-        <p className="text-gray-400">Upload images or videos to detect deepfakes and manipulated media</p>
+        <p className="text-gray-400">Upload images or videos to detect deepfakes and manipulated media.</p>
       </div>
 
-      {/* File Upload */}
       <div className="card-dark">
         <h2 className="text-xl font-bold mb-6">Upload Media for Analysis</h2>
         <form onSubmit={handleScan} className="space-y-4">
@@ -144,10 +115,11 @@ export default function DeepfakeScanner() {
               </>
             )}
           </button>
+
+          {error && <p className="text-sm text-danger mt-2">{error}</p>}
         </form>
       </div>
 
-      {/* Scan Result */}
       {result && (
         <div className="card-dark border-2 border-primary/30">
           <div className="flex items-start justify-between mb-6">
@@ -172,7 +144,6 @@ export default function DeepfakeScanner() {
           )}
 
           <div className="space-y-4">
-            {/* Score Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
                 <p className="text-xs text-gray-400 mb-2">Authenticity Score</p>
@@ -207,7 +178,6 @@ export default function DeepfakeScanner() {
               </div>
             </div>
 
-            {/* Artifacts */}
             <div className="space-y-2">
               <p className="text-sm font-semibold">Detected Artifacts:</p>
               <div className="space-y-2">
@@ -220,7 +190,6 @@ export default function DeepfakeScanner() {
               </div>
             </div>
 
-            {/* Recommendations */}
             <div className="p-4 rounded-lg bg-dark-card/50 border border-dark-border/30 space-y-2">
               <p className="font-semibold text-sm">Recommendations:</p>
               <ul className="text-xs text-gray-300 space-y-1">
@@ -233,7 +202,6 @@ export default function DeepfakeScanner() {
         </div>
       )}
 
-      {/* Scan History */}
       {history.length > 0 && (
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Recent Scans</h2>

@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TrendingUp, AlertTriangle, Shield, Zap } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
-const weeklyData = [
+const defaultWeeklyData = [
   { date: 'Mon', scans: 45, threats: 8 },
   { date: 'Tue', scans: 52, threats: 12 },
   { date: 'Wed', scans: 38, threats: 5 },
@@ -13,16 +15,61 @@ const weeklyData = [
   { date: 'Sun', scans: 42, threats: 7 },
 ]
 
-const scanTypeData = [
+const defaultScanTypeData = [
   { name: 'URL Scans', value: 45, color: '#00d4ff' },
   { name: 'Message Scans', value: 28, color: '#b24bff' },
   { name: 'Deepfake Checks', value: 15, color: '#ff1744' },
   { name: 'News Verification', value: 12, color: '#ffb300' },
 ]
 
+const defaultThreatStats = [
+  { name: 'Phishing Attempts', count: 28, percent: 47 },
+  { name: 'Malware Links', count: 15, percent: 25 },
+  { name: 'Scam Messages', count: 12, percent: 20 },
+  { name: 'Deepfakes', count: 4, percent: 8 },
+]
+
+const defaultPerformanceStats = [
+  { name: 'URL Scanner', accuracy: 98.5 },
+  { name: 'Message Scanner', accuracy: 97.2 },
+  { name: 'Deepfake Detector', accuracy: 96.8 },
+  { name: 'News Verifier', accuracy: 95.1 },
+]
+
 const COLORS = ['#00d4ff', '#b24bff', '#ff1744', '#ffb300']
 
 export default function Analytics() {
+  const [weeklyData, setWeeklyData] = useState(defaultWeeklyData)
+  const [scanTypeData, setScanTypeData] = useState(defaultScanTypeData)
+  const [summaryStats, setSummaryStats] = useState([
+    { label: 'Total Scans', value: '328', icon: Shield, change: '+12%' },
+    { label: 'Threats Found', value: '59', icon: AlertTriangle, change: '+8%' },
+    { label: 'This Week', value: '89', icon: TrendingUp, change: '+23%' },
+    { label: 'Accuracy', value: '98.7%', icon: Zap, change: '+0.5%' },
+  ])
+  const [threatStats, setThreatStats] = useState(defaultThreatStats)
+  const [performanceStats, setPerformanceStats] = useState(defaultPerformanceStats)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await api.get('/analytics/dashboard')
+        const data = response.data
+
+        setWeeklyData(data.weeklyActivity || defaultWeeklyData)
+        setScanTypeData(data.scanDistribution || defaultScanTypeData)
+        setSummaryStats(data.summaryStats || summaryStats)
+        setThreatStats(data.threatStats || defaultThreatStats)
+        setPerformanceStats(data.performanceStats || defaultPerformanceStats)
+      } catch (err) {
+        setError(safeApiError(err))
+      }
+    }
+
+    fetchAnalytics()
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -33,12 +80,7 @@ export default function Analytics() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Scans', value: '328', icon: Shield, change: '+12%' },
-          { label: 'Threats Found', value: '59', icon: AlertTriangle, change: '+8%' },
-          { label: 'This Week', value: '89', icon: TrendingUp, change: '+23%' },
-          { label: 'Accuracy', value: '98.7%', icon: Zap, change: '+0.5%' },
-        ].map((stat, idx) => {
+        {summaryStats.map((stat, idx) => {
           const Icon = stat.icon
           return (
             <div key={idx} className="card-dark">
@@ -96,12 +138,7 @@ export default function Analytics() {
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Top Threats Detected</h2>
           <div className="space-y-3">
-            {[
-              { name: 'Phishing Attempts', count: 28, percent: 47 },
-              { name: 'Malware Links', count: 15, percent: 25 },
-              { name: 'Scam Messages', count: 12, percent: 20 },
-              { name: 'Deepfakes', count: 4, percent: 8 },
-            ].map((threat, idx) => (
+            {threatStats.map((threat, idx) => (
               <div key={idx}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm">{threat.name}</span>
@@ -118,12 +155,7 @@ export default function Analytics() {
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Scanner Performance</h2>
           <div className="space-y-3">
-            {[
-              { name: 'URL Scanner', accuracy: 98.5 },
-              { name: 'Message Scanner', accuracy: 97.2 },
-              { name: 'Deepfake Detector', accuracy: 96.8 },
-              { name: 'News Verifier', accuracy: 95.1 },
-            ].map((scanner, idx) => (
+            {performanceStats.map((scanner, idx) => (
               <div key={idx}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm">{scanner.name}</span>

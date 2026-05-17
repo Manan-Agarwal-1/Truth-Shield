@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { Send, Copy, CheckCircle, AlertTriangle, Loader } from 'lucide-react'
+import { api, safeApiError } from '@/lib/api'
 
 interface ScanResult {
   url: string
-  phishingScore: number
+  score: number
   httpsValid: boolean
   trustScore: number
-  riskLevel: 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS'
+  threatLevel: 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS'
   details: string[]
 }
 
@@ -17,52 +18,34 @@ export default function URLScanner() {
   const [result, setResult] = useState<ScanResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<ScanResult[]>([])
-
-  const generateMockResult = (inputUrl: string): ScanResult => {
-    const suspiciousKeywords = ['phish', 'verify', 'confirm', 'update', 'secure', 'login', 'account', 'urgent']
-    const isSuspicious = suspiciousKeywords.some(word => inputUrl.toLowerCase().includes(word))
-    
-    const riskLevel = isSuspicious ? (Math.random() > 0.5 ? 'DANGEROUS' : 'SUSPICIOUS') : 'SAFE'
-    const phishingScore = riskLevel === 'SAFE' ? Math.random() * 20 : Math.random() * 100
-    const httpsValid = !isSuspicious && Math.random() > 0.3
-    
-    return {
-      url: inputUrl,
-      phishingScore: Math.round(phishingScore),
-      httpsValid,
-      trustScore: 100 - Math.round(phishingScore),
-      riskLevel,
-      details: [
-        httpsValid ? '✓ HTTPS encryption verified' : '✗ No HTTPS encryption',
-        isSuspicious ? '⚠ Suspicious domain patterns detected' : '✓ Domain looks legitimate',
-        Math.random() > 0.6 ? '⚠ Known phishing template detected' : '✓ No known phishing templates',
-        Math.random() > 0.7 ? '⚠ Shortened URL detected' : '✓ Full URL displayed',
-      ]
-    }
-  }
+  const [error, setError] = useState('')
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!url) return
 
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    setError('')
 
-    const scanResult = generateMockResult(url)
-    setResult(scanResult)
-    setHistory([scanResult, ...history.slice(0, 9)])
-    setLoading(false)
+    try {
+      const response = await api.post('/scan/url', { url })
+      const scanResult = response.data.result
+      setResult(scanResult)
+      setHistory([scanResult, ...history.slice(0, 9)])
+    } catch (err) {
+      setError(safeApiError(err))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">URL Scanner</h1>
-        <p className="text-gray-400">Analyze URLs for phishing, malware, and other threats</p>
+        <p className="text-gray-400">Analyze URLs for phishing, malware, and other threats.</p>
       </div>
 
-      {/* Scanner Input */}
       <div className="card-dark">
         <h2 className="text-xl font-bold mb-6">Scan URL for Threats</h2>
         <form onSubmit={handleScan} className="space-y-4">
@@ -96,25 +79,25 @@ export default function URLScanner() {
               </button>
             </div>
           </div>
+
+          {error && <p className="text-sm text-danger">{error}</p>}
         </form>
       </div>
 
-      {/* Scan Result */}
       {result && (
         <div className="card-dark border-2 border-primary/30">
           <div className="flex items-start justify-between mb-6">
             <h2 className="text-xl font-bold">Scan Result</h2>
             <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-              result.riskLevel === 'SAFE' ? 'bg-success/20 text-success' :
-              result.riskLevel === 'SUSPICIOUS' ? 'bg-warning/20 text-warning' :
+              result.threatLevel === 'SAFE' ? 'bg-success/20 text-success' :
+              result.threatLevel === 'SUSPICIOUS' ? 'bg-warning/20 text-warning' :
               'bg-danger/20 text-danger'
             }`}>
-              {result.riskLevel}
+              {result.threatLevel}
             </div>
           </div>
 
           <div className="space-y-4">
-            {/* URL Display */}
             <div className="flex items-center gap-2 p-3 rounded-lg bg-dark-card border border-dark-border/50 group">
               <span className="text-gray-400 flex-1 break-all text-sm">{result.url}</span>
               <button className="p-2 rounded hover:bg-primary/10 transition">
@@ -122,22 +105,21 @@ export default function URLScanner() {
               </button>
             </div>
 
-            {/* Score Cards */}
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
                 <p className="text-xs text-gray-400 mb-2">Phishing Score</p>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold">{result.phishingScore}</div>
+                  <div className="text-2xl font-bold">{result.score}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
                 <div className="mt-2 w-full bg-dark-border rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${
-                      result.phishingScore < 33 ? 'bg-success' :
-                      result.phishingScore < 66 ? 'bg-warning' :
+                      result.score < 33 ? 'bg-success' :
+                      result.score < 66 ? 'bg-warning' :
                       'bg-danger'
                     }`}
-                    style={{ width: `${result.phishingScore}%` }}
+                    style={{ width: `${result.score}%` }}
                   ></div>
                 </div>
               </div>
@@ -174,7 +156,6 @@ export default function URLScanner() {
               </div>
             </div>
 
-            {/* Details */}
             <div className="space-y-2">
               <p className="text-sm font-semibold">Analysis Details</p>
               {result.details.map((detail, idx) => (
@@ -188,7 +169,6 @@ export default function URLScanner() {
         </div>
       )}
 
-      {/* Scan History */}
       {history.length > 0 && (
         <div className="card-dark">
           <h2 className="text-lg font-bold mb-4">Recent Scans</h2>
@@ -201,13 +181,13 @@ export default function URLScanner() {
                 <div className="flex items-center gap-4 ml-4">
                   <div className="text-right">
                     <p className={`text-xs font-bold ${
-                      scan.riskLevel === 'SAFE' ? 'text-success' :
-                      scan.riskLevel === 'SUSPICIOUS' ? 'text-warning' :
+                      scan.threatLevel === 'SAFE' ? 'text-success' :
+                      scan.threatLevel === 'SUSPICIOUS' ? 'text-warning' :
                       'text-danger'
                     }`}>
-                      {scan.riskLevel}
+                      {scan.threatLevel}
                     </p>
-                    <p className="text-xs text-gray-400">Score: {scan.phishingScore}</p>
+                    <p className="text-xs text-gray-400">Score: {scan.score}</p>
                   </div>
                 </div>
               </div>
