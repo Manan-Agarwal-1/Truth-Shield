@@ -90,7 +90,10 @@ router.post('/news', (req, res) => {
 
 router.get('/history', (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 50, 200)
-  res.json(req.store.scanResults.slice(-limit).reverse())
+  res.json({
+    success: true,
+    history: req.store.scanResults.slice(-limit).reverse()
+  })
 })
 
 router.get('/:id', (req, res) => {
@@ -98,7 +101,7 @@ router.get('/:id', (req, res) => {
   if (!scan) {
     return res.status(404).json({ error: 'Scan result not found' })
   }
-  res.json(scan)
+  res.json({ success: true, scan })
 })
 
 module.exports = router

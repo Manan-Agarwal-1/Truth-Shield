@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { clearAuthUser, getAuthUser } from '@/lib/auth'
 import {
   LayoutDashboard,
   Link as LinkIcon,
@@ -40,17 +41,17 @@ export default function DashboardLayout({
   const router = useRouter()
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (!userData) {
+    const currentUser = getAuthUser()
+    if (!currentUser) {
       router.push('/login')
     } else {
-      setUser(JSON.parse(userData))
+      setUser(currentUser)
     }
   }, [router])
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
-    router.push('/')
+    clearAuthUser()
+    router.push('/login')
   }
 
   if (!user) return null

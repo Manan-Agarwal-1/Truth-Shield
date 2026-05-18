@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 router.get('/', (req, res) => {
-  res.json(req.store.users)
+  res.json({ success: true, users: req.store.users })
 })
 
 router.get('/:id', (req, res) => {
@@ -10,7 +10,7 @@ router.get('/:id', (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' })
   }
-  res.json(user)
+  res.json({ success: true, user })
 })
 
 module.exports = router
