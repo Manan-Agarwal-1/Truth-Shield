@@ -4,7 +4,7 @@ export type AuthUser = {
   email: string
 }
 
-const USER_KEY = 'truthshield_user'
+const USER_KEY = 'user'
 
 export function getAuthUser(): AuthUser | null {
   if (typeof window === 'undefined') return null

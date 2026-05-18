@@ -5,7 +5,7 @@ const { generateMockAlerts } = require('../utils/mockData')
 const router = express.Router()
 
 router.get('/', (req, res) => {
-  res.json(req.store.alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)))
+  res.json({ success: true, alerts: req.store.alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) })
 })
 
 router.post('/:id/read', (req, res) => {

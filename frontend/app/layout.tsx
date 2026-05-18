@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ToastProvider from '@/components/ToastProvider'
 
 export const metadata: Metadata = {
   title: 'TruthShield AI - Cybersecurity Threat Detection',
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-dark">
         {children}
+        <ToastProvider />
       </body>
     </html>
   )

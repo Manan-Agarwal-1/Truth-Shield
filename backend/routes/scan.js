@@ -15,6 +15,7 @@ router.post('/url', (req, res) => {
     id: uuidv4(),
     type: 'URL',
     content: url,
+    url,
     ...analysis,
     httpsValid: !url.toLowerCase().startsWith('http://'),
     trustScore: Math.max(0, 100 - analysis.score),
@@ -36,6 +37,7 @@ router.post('/message', (req, res) => {
     id: uuidv4(),
     type: 'MESSAGE',
     content: message,
+    message,
     ...analysis,
     indicators: analysis.threatLevel !== 'SAFE' ? ['Suspicious language detected', 'Potential scam vocabulary found'] : [],
     timestamp: new Date(),
@@ -56,6 +58,7 @@ router.post('/deepfake', (req, res) => {
     id: uuidv4(),
     type: 'DEEPFAKE',
     content: filename,
+    fileName: filename,
     ...result,
     timestamp: new Date(),
   }
@@ -75,6 +78,8 @@ router.post('/news', (req, res) => {
     id: uuidv4(),
     type: 'NEWS',
     content: headline,
+    headline,
+    article: article || '',
     ...result,
     timestamp: new Date(),
   }

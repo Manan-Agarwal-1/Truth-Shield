@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Upload, Loader, Image, Video } from 'lucide-react'
+import { ChangeEvent, FormEvent, useState } from 'react'
+import { Upload, Loader, Image as ImageIcon, Video as VideoIcon } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
 
 interface DeepfakeScanResult {
@@ -21,7 +23,7 @@ export default function DeepfakeScanner() {
   const [history, setHistory] = useState<DeepfakeScanResult[]>([])
   const [error, setError] = useState('')
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
@@ -33,7 +35,7 @@ export default function DeepfakeScanner() {
     }
   }
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e: FormEvent) => {
     e.preventDefault()
     if (!file) return
 
@@ -45,6 +47,7 @@ export default function DeepfakeScanner() {
       const scanResult: DeepfakeScanResult = response.data.result
       setResult(scanResult)
       setHistory([scanResult, ...history.slice(0, 9)])
+      toast.success('Deepfake analysis complete')
     } catch (err) {
       setError(safeApiError(err))
     } finally {
@@ -80,14 +83,14 @@ export default function DeepfakeScanner() {
                       <img src={preview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
                     ) : (
                       <div className="flex items-center justify-center">
-                        <Video className="w-16 h-16 text-primary" />
+                        <VideoIcon className="w-16 h-16 text-primary" />
                       </div>
                     )}
                     <p className="text-sm text-primary font-semibold">{file?.name}</p>
                   </div>
                 ) : (
                   <>
-                    <Image className="w-16 h-16 mx-auto text-primary" />
+                    <ImageIcon className="w-16 h-16 mx-auto text-primary" />
                     <div>
                       <p className="font-semibold">Drop your media here or click to browse</p>
                       <p className="text-sm text-gray-400">Supported: JPG, PNG, MP4, WebM (max 100MB)</p>
@@ -135,7 +138,7 @@ export default function DeepfakeScanner() {
             <div className="mb-6">
               {result.fileName.match(/\.(mp4|webm|avi)$/i) ? (
                 <div className="w-full bg-dark-card rounded-lg flex items-center justify-center py-12 border border-dark-border/50">
-                  <Video className="w-16 h-16 text-primary/50" />
+                  <VideoIcon className="w-16 h-16 text-primary/50" />
                 </div>
               ) : (
                 <img src={preview} alt="Scanned media" className="w-full rounded-lg border border-dark-border/50" />
@@ -151,16 +154,14 @@ export default function DeepfakeScanner() {
                   <div className="text-3xl font-bold">{result.authenticityScore}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-3 w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      result.authenticityScore > 70 ? 'bg-success' :
-                      result.authenticityScore > 40 ? 'bg-warning' :
-                      'bg-danger'
-                    }`}
-                    style={{ width: `${result.authenticityScore}%` }}
-                  ></div>
-                </div>
+                <ProgressBar
+                  value={result.authenticityScore}
+                  colorClass={
+                    result.authenticityScore > 70 ? 'text-success' :
+                    result.authenticityScore > 40 ? 'text-warning' :
+                    'text-danger'
+                  }
+                />
               </div>
 
               <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
@@ -169,12 +170,7 @@ export default function DeepfakeScanner() {
                   <div className="text-3xl font-bold">{result.manipulationProbability}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-3 w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-2 rounded-full bg-danger transition-all"
-                    style={{ width: `${result.manipulationProbability}%` }}
-                  ></div>
-                </div>
+                <ProgressBar value={result.manipulationProbability} colorClass="text-danger" />
               </div>
             </div>
 
@@ -209,7 +205,7 @@ export default function DeepfakeScanner() {
             {history.map((scan, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-dark-card/50 border border-dark-border/30 hover:border-primary/30 transition-all cursor-pointer">
                 <div className="flex items-center gap-3 flex-1">
-                  <Image className="w-4 h-4 text-gray-400" />
+                  <ImageIcon className="w-4 h-4 text-gray-400" />
                   <p className="text-sm truncate">{scan.fileName}</p>
                 </div>
                 <div className="flex items-center gap-4 ml-4">
@@ -231,10 +227,3 @@ export default function DeepfakeScanner() {
   )
 }
 
-function Video({ className }: { className: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-      <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10.293 3.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L15.586 5 14.293 6.293z" />
-    </svg>
-  )
-}

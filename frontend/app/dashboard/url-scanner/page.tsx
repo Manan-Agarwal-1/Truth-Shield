@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Send, Copy, CheckCircle, AlertTriangle, Loader } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
 
 interface ScanResult {
@@ -20,7 +22,7 @@ export default function URLScanner() {
   const [history, setHistory] = useState<ScanResult[]>([])
   const [error, setError] = useState('')
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e: FormEvent) => {
     e.preventDefault()
     if (!url) return
 
@@ -32,8 +34,11 @@ export default function URLScanner() {
       const scanResult = response.data.result
       setResult(scanResult)
       setHistory([scanResult, ...history.slice(0, 9)])
+      toast.success('URL scan complete')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -112,16 +117,14 @@ export default function URLScanner() {
                   <div className="text-2xl font-bold">{result.score}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-2 w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      result.score < 33 ? 'bg-success' :
-                      result.score < 66 ? 'bg-warning' :
-                      'bg-danger'
-                    }`}
-                    style={{ width: `${result.score}%` }}
-                  ></div>
-                </div>
+                <ProgressBar
+                  value={result.score}
+                  colorClass={
+                    result.score < 33 ? 'text-success' :
+                    result.score < 66 ? 'text-warning' :
+                    'text-danger'
+                  }
+                />
               </div>
 
               <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">
@@ -130,12 +133,7 @@ export default function URLScanner() {
                   <div className="text-2xl font-bold">{result.trustScore}</div>
                   <div className="text-xs">/ 100</div>
                 </div>
-                <div className="mt-2 w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-2 rounded-full bg-success transition-all"
-                    style={{ width: `${result.trustScore}%` }}
-                  ></div>
-                </div>
+                <ProgressBar value={result.trustScore} colorClass="text-success" />
               </div>
 
               <div className="p-4 rounded-lg bg-dark-card border border-dark-border/50">

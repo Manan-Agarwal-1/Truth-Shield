@@ -2,7 +2,36 @@
 
 import { useEffect, useState } from 'react'
 import { Search, Download, Filter } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
+
+function getScanTypeLabel(type: string) {
+  switch (type) {
+    case 'URL':
+      return 'URL Scan'
+    case 'MESSAGE':
+      return 'Message Scan'
+    case 'DEEPFAKE':
+      return 'Deepfake Scan'
+    case 'NEWS':
+      return 'News Verification'
+    default:
+      return type
+  }
+}
+
+function getResultValue(item: any) {
+  return item.result || item.threatLevel || item.classification || 'UNKNOWN'
+}
+
+function getScoreValue(item: any) {
+  return item.score ?? item.confidence ?? 0
+}
+
+function getDisplayContent(item: any) {
+  return item.content || item.headline || item.fileName || 'N/A'
+}
 
 const initialHistory = [
   {
@@ -89,10 +118,12 @@ export default function History() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await api.get('/history')
-        setHistoryData(response.data.history)
+        const response = await api.get('/scan/history')
+        setHistoryData(response.data)
       } catch (err) {
-        setError(safeApiError(err))
+        const message = safeApiError(err)
+        setError(message)
+        toast.error(message)
       }
     }
 
@@ -100,10 +131,12 @@ export default function History() {
   }, [])
 
   const filteredHistory = historyData.filter((item) => {
-    const matchesSearch = item.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.type.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === 'all' || item.type === filterType
-    const matchesResult = filterResult === 'all' || item.result === filterResult
+    const content = getDisplayContent(item).toLowerCase()
+    const typeLabel = getScanTypeLabel(item.type)
+    const resultValue = getResultValue(item).toLowerCase()
+    const matchesSearch = content.includes(searchTerm.toLowerCase()) || typeLabel.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = filterType === 'all' || typeLabel === filterType
+    const matchesResult = filterResult === 'all' || resultValue === filterResult.toLowerCase()
     return matchesSearch && matchesType && matchesResult
   })
 
@@ -160,6 +193,7 @@ export default function History() {
           <div>
             <label className="block text-sm font-medium mb-2">Scan Type</label>
             <select
+              aria-label="Scan Type"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="input-dark"
@@ -176,6 +210,7 @@ export default function History() {
           <div>
             <label className="block text-sm font-medium mb-2">Result</label>
             <select
+              aria-label="Result Filter"
               value={filterResult}
               onChange={(e) => setFilterResult(e.target.value)}
               className="input-dark"
@@ -215,30 +250,30 @@ export default function History() {
             {filteredHistory.map((item) => (
               <tr key={item.id} className="border-b border-dark-border/50 hover:bg-dark-card/50 transition-colors">
                 <td className="px-6 py-4">
-                  <span className="text-xs font-semibold text-primary">{item.type}</span>
+                  <span className="text-xs font-semibold text-primary">{getScanTypeLabel(item.type)}</span>
                 </td>
-                <td className="px-6 py-4 max-w-xs truncate text-gray-300">{item.content}</td>
+                <td className="px-6 py-4 max-w-xs truncate text-gray-300">{getDisplayContent(item)}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${getResultColor(item.result)}`}>
-                    {item.result}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${getResultColor(getResultValue(item))}`}>
+                    {getResultValue(item)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-12 h-2 bg-dark-border rounded-full">
-                      <div
-                        className={`h-2 rounded-full ${
-                          item.score < 33 ? 'bg-success' :
-                          item.score < 66 ? 'bg-warning' :
-                          'bg-danger'
-                        }`}
-                        style={{ width: `${item.score}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs">{item.score}%</span>
+                    <ProgressBar
+                      value={getScoreValue(item)}
+                      colorClass={
+                        getScoreValue(item) < 33 ? 'text-success' :
+                        getScoreValue(item) < 66 ? 'text-warning' :
+                        'text-danger'
+                      }
+                      className="w-12"
+                      height="h-2"
+                    />
+                    <span className="text-xs">{getScoreValue(item)}%</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-400 text-xs">{item.timestamp}</td>
+                <td className="px-6 py-4 text-gray-400 text-xs">{item.timestamp ?? 'Unknown'}</td>
                 <td className="px-6 py-4">
                   <button className="text-primary hover:text-primary/80 text-xs font-semibold">
                     View

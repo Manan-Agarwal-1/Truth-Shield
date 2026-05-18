@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Send, Loader } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
 
 interface MessageScanResult {
@@ -19,7 +21,7 @@ export default function MessageScanner() {
   const [history, setHistory] = useState<MessageScanResult[]>([])
   const [error, setError] = useState('')
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e: FormEvent) => {
     e.preventDefault()
     if (!message.trim()) return
 
@@ -31,8 +33,11 @@ export default function MessageScanner() {
       const scanResult: MessageScanResult = response.data.result
       setResult(scanResult)
       setHistory([scanResult, ...history.slice(0, 9)])
+      toast.success('Message scan complete')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -107,16 +112,15 @@ export default function MessageScanner() {
                 <p className="text-sm font-semibold">Scam Confidence Score</p>
                 <p className="text-2xl font-bold">{result.confidence}%</p>
               </div>
-              <div className="w-full bg-dark-border rounded-full h-3 overflow-hidden">
-                <div
-                  className={`h-3 rounded-full transition-all ${
-                    result.confidence < 33 ? 'bg-success' :
-                    result.confidence < 66 ? 'bg-warning' :
-                    'bg-danger'
-                  }`}
-                  style={{ width: `${result.confidence}%` }}
-                ></div>
-              </div>
+              <ProgressBar
+                value={result.confidence}
+                colorClass={
+                  result.confidence < 33 ? 'text-success' :
+                  result.confidence < 66 ? 'text-warning' :
+                  'text-danger'
+                }
+                height="h-3"
+              />
             </div>
 
             {result.indicators.length > 0 && (

@@ -66,6 +66,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={setting.enabled}
                     onChange={() => setting.setter(!setting.enabled)}
+                    aria-label={setting.label}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-primary transition-all"></div>

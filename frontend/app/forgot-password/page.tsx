@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Shield, Mail, ArrowRight } from 'lucide-react'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
   }

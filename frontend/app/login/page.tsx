@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Shield, Mail, Lock, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { api, safeApiError } from '@/lib/api'
 import { setAuthUser } from '@/lib/auth'
 
@@ -13,16 +15,19 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
 
     try {
       const response = await api.post('/auth/login', { email, password })
       setAuthUser(response.data.user)
+      toast.success('Logged in successfully')
       router.push('/dashboard')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     }
   }
 
@@ -77,16 +82,6 @@ export default function Login() {
               Sign In <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-dark-border">
-            <p className="text-center text-gray-400">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-primary hover:text-primary/80 font-semibold">
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </div>
 
           <div className="mt-6 pt-6 border-t border-dark-border">
             <p className="text-center text-gray-400">

@@ -5,7 +5,25 @@ const router = express.Router()
 
 router.get('/dashboard', (req, res) => {
   const analytics = generateMockAnalytics()
-  res.json({ success: true, analytics })
+  const weeklyActivity = analytics.weeklyScans
+  const scanDistribution = Object.entries(analytics.threatDistribution).map(([name, value]) => ({ name, value }))
+  const summaryStats = [
+    { label: 'Total Scans', value: `${req.store.scanResults.length}`, change: '+12%' },
+    { label: 'Threats Found', value: `${req.store.scanResults.filter((scan) => scan.threatLevel !== 'SAFE').length}`, change: '+8%' },
+    { label: 'This Week', value: `${weeklyActivity.reduce((sum, item) => sum + item.scans, 0)}`, change: '+23%' },
+    { label: 'Accuracy', value: '98.7%', change: '+0.5%' },
+  ]
+  const threatStats = scanDistribution.map((entry) => ({ name: entry.name, count: entry.value, percent: Math.round((entry.value / 100) * 100) }))
+  const performanceStats = Object.entries(analytics.scannerAccuracy).map(([key, value]) => ({ name: key.replace(/([A-Z])/g, ' $1').replace('url', 'URL').replace('deepfake', 'Deepfake').replace('message', 'Message').replace('news', 'News'), accuracy: value }))
+
+  res.json({
+    success: true,
+    weeklyActivity,
+    scanDistribution,
+    summaryStats,
+    threatStats,
+    performanceStats,
+  })
 })
 
 router.get('/summary', (req, res) => {

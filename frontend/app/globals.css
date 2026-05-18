@@ -80,6 +80,27 @@ body {
   .input-dark {
     @apply w-full bg-dark-card border border-dark-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all duration-300;
   }
+
+  .progress-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #12213a;
+  }
+
+  .progress-bar::-webkit-progress-bar {
+    background-color: #12213a;
+    border-radius: 9999px;
+  }
+
+  .progress-bar::-webkit-progress-value {
+    background: currentColor;
+    border-radius: 9999px;
+  }
+
+  .progress-bar::-moz-progress-bar {
+    background: currentColor;
+    border-radius: 9999px;
+  }
 }
 
 /* Animations */

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TrendingUp, AlertTriangle, Shield, Zap } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
 
 const defaultWeeklyData = [
@@ -36,6 +38,13 @@ const defaultPerformanceStats = [
   { name: 'News Verifier', accuracy: 95.1 },
 ]
 
+const summaryIconMap = {
+  'Total Scans': Shield,
+  'Threats Found': AlertTriangle,
+  'This Week': TrendingUp,
+  'Accuracy': Zap,
+}
+
 const COLORS = ['#00d4ff', '#b24bff', '#ff1744', '#ffb300']
 
 export default function Analytics() {
@@ -59,11 +68,16 @@ export default function Analytics() {
 
         setWeeklyData(data.weeklyActivity || defaultWeeklyData)
         setScanTypeData(data.scanDistribution || defaultScanTypeData)
-        setSummaryStats(data.summaryStats || summaryStats)
+        setSummaryStats((data.summaryStats || summaryStats).map((item: any) => ({
+          ...item,
+          icon: item.icon || (summaryIconMap as any)[item.label as string] || Shield,
+        })))
         setThreatStats(data.threatStats || defaultThreatStats)
         setPerformanceStats(data.performanceStats || defaultPerformanceStats)
       } catch (err) {
-        setError(safeApiError(err))
+        const message = safeApiError(err)
+        setError(message)
+        toast.error(message)
       }
     }
 
@@ -144,9 +158,7 @@ export default function Analytics() {
                   <span className="text-sm">{threat.name}</span>
                   <span className="text-sm font-bold text-danger">{threat.count}</span>
                 </div>
-                <div className="w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div className="h-2 rounded-full bg-danger transition-all" style={{ width: `${threat.percent}%` }}></div>
-                </div>
+                <ProgressBar value={threat.percent} colorClass="text-danger" />
               </div>
             ))}
           </div>
@@ -161,9 +173,7 @@ export default function Analytics() {
                   <span className="text-sm">{scanner.name}</span>
                   <span className="text-sm font-bold text-success">{scanner.accuracy}%</span>
                 </div>
-                <div className="w-full bg-dark-border rounded-full h-2 overflow-hidden">
-                  <div className="h-2 rounded-full bg-success transition-all" style={{ width: `${scanner.accuracy}%` }}></div>
-                </div>
+                <ProgressBar value={scanner.accuracy} colorClass="text-success" />
               </div>
             ))}
           </div>

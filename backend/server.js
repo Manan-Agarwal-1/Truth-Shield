@@ -1,7 +1,6 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-const bodyParser = require('body-parser')
 const connectDB = require('./db')
 const authRoutes = require('./routes/auth')
 const scanRoutes = require('./routes/scan')
@@ -16,8 +15,12 @@ const PORT = process.env.PORT || 5000
 connectDB()
 
 app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*' }))
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`)
+  next()
+})
 
 const users = generateMockUsers(25)
 const scanResults = generateMockScanResults(180)

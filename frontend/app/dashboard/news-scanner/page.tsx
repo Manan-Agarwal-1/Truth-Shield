@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Send, Loader } from 'lucide-react'
+import toast from 'react-hot-toast'
+import ProgressBar from '@/components/ProgressBar'
 import { api, safeApiError } from '@/lib/api'
 
 interface NewsScanResult {
@@ -21,7 +23,7 @@ export default function NewsScanner() {
   const [history, setHistory] = useState<NewsScanResult[]>([])
   const [error, setError] = useState('')
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e: FormEvent) => {
     e.preventDefault()
     if (!headline.trim()) return
 
@@ -33,8 +35,11 @@ export default function NewsScanner() {
       const scanResult: NewsScanResult = response.data.result
       setResult(scanResult)
       setHistory([scanResult, ...history.slice(0, 9)])
+      toast.success('News verification complete')
     } catch (err) {
-      setError(safeApiError(err))
+      const message = safeApiError(err)
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -121,16 +126,15 @@ export default function NewsScanner() {
                 <p className="text-sm font-semibold">Misinformation Score</p>
                 <p className="text-2xl font-bold">{result.misinformationScore}%</p>
               </div>
-              <div className="w-full bg-dark-border rounded-full h-3 overflow-hidden">
-                <div
-                  className={`h-3 rounded-full transition-all ${
-                    result.misinformationScore < 33 ? 'bg-success' :
-                    result.misinformationScore < 66 ? 'bg-warning' :
-                    'bg-danger'
-                  }`}
-                  style={{ width: `${result.misinformationScore}%` }}
-                ></div>
-              </div>
+              <ProgressBar
+                value={result.misinformationScore}
+                colorClass={
+                  result.misinformationScore < 33 ? 'text-success' :
+                  result.misinformationScore < 66 ? 'text-warning' :
+                  'text-danger'
+                }
+                height="h-3"
+              />
             </div>
 
             <div className="space-y-2">

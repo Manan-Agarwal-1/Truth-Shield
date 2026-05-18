@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Trash2, Bell, Check } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { api, safeApiError } from '@/lib/api'
 
 interface Alert {
@@ -32,7 +33,9 @@ export default function Alerts() {
         const response = await api.get('/alerts')
         setAlerts(response.data.alerts)
       } catch (err) {
-        setError(safeApiError(err))
+        const message = safeApiError(err)
+        setError(message)
+        toast.error(message)
       }
     }
 
@@ -50,10 +53,12 @@ export default function Alerts() {
     setAlerts(alerts.map((alert) =>
       alert.id === id ? { ...alert, read: true } : alert
     ))
+    toast.success('Alert marked as read')
   }
 
   const handleDelete = (id: number) => {
     setAlerts(alerts.filter((alert) => alert.id !== id))
+    toast.success('Alert deleted')
   }
 
   const handleMarkAllAsRead = () => {
